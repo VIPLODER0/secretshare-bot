@@ -128,3 +128,9 @@ This project is licensed under the [MIT License](LICENSE).
 
 * Open an [Issue](https://github.com/ByteSupreme/SecretShare-Bot/issues) for bug reports or help.
 * Submit a [Pull Request](https://github.com/ByteSupreme/SecretShare-Bot/pulls) to contribute.
+
+## 🤖 TELEGRAM BOT 
+
+```bash
+@SecretSharePrimeBot_BOT
+```
